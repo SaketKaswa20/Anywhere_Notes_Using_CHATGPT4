@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anywhere-Notes</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .input-area {
+      position: absolute;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      overflow: hidden;
+      font-size: 16px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .pasted-image {
+      position: absolute;
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="fixed top-0 left-0 w-full p-4">
+    <h1 class="text-3xl font-bold">Anywhere-Notes</h1>
+    <button id="clearAll" class="bg-red-500 text-white px-4 py-2 rounded shadow">Clear All</button>
+  </div>
+  <script>
+    function createInputArea(x, y) {
+      const inputArea = document.createElement('textarea');
+      inputArea.classList.add('input-area');
+      inputArea.style.top = `${y}px`;
+      inputArea.style.left = `${x}px`;
+      document.body.appendChild(inputArea);
+      inputArea.focus();
+
+      inputArea.addEventListener('blur', () => {
+        if (inputArea.value.trim() === '') {
+          inputArea.remove();
+        } else {
+          inputArea.setAttribute('readonly', true);
+        }
+      });
+
+      inputArea.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const clipboardData = e.clipboardData || window.clipboardData;
+        const pastedData = clipboardData.getData('text/html') || clipboardData.getData('text/plain');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = pastedData;
+
+        const pastedImage = tempDiv.querySelector('img');
+        if (pastedImage) {
+          inputArea.remove();
+          createPastedImage(x, y, pastedImage.src);
+        } else {
+          document.execCommand('insertHTML', false, pastedData);
+        }
+      });
+    }
+
+    function createPastedImage(x, y, src) {
+      const img = document.createElement('img');
+      img.classList.add('pasted-image');
+      img.style.top = `${y}px`;
+      img.style.left = `${x}px`;
+      img.src = src;
+      document.body.appendChild(img);
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'clearAll') return;
+
+      createInputArea(e.pageX, e.pageY);
+    });
+
+    document.getElementById('clearAll').addEventListener('click', () => {
+      const inputAreas = document.querySelectorAll('.input-area, .pasted-image');
+      inputAreas.forEach(inputArea => inputArea.remove());
+    });
+  </script>
+</body>
+</html>
